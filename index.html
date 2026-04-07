@@ -5,104 +5,93 @@
 <title>Escala Profissional</title>
 
 <style>
-body {
-    font-family: Arial;
-    background: #eef2f7;
-    margin: 0;
-}
+body { font-family: Arial; background:#eef2f7; margin:0;}
 
 header {
-    background: #2f3542;
-    color: white;
-    padding: 15px;
-    text-align: center;
+    background:#2f3542;
+    color:white;
+    text-align:center;
+    padding:15px;
 }
 
 header img {
-    height: 60px;
-    display: block;
-    margin: 0 auto 10px;
+    height:60px;
+    display:block;
+    margin:0 auto 10px;
 }
 
-.container {
-    padding: 20px;
+.container { padding:20px; }
+
+.controls, .ferias {
+    text-align:center;
+    margin-bottom:20px;
 }
 
-h1 {
-    text-align: center;
-}
-
-.controls {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-input, button {
-    padding: 8px;
-    margin: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+input, select, button {
+    padding:8px;
+    margin:5px;
+    border-radius:5px;
 }
 
 button {
-    background: #3742fa;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #2f3542;
+    background:#3742fa;
+    color:white;
+    border:none;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
+    width:100%;
+    border-collapse:collapse;
+    background:white;
 }
 
-th {
-    background: #3742fa;
-    color: white;
-}
+th { background:#3742fa; color:white;}
 
 th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
+    border:1px solid #ccc;
+    padding:6px;
+    text-align:center;
 }
 
-select {
-    width: 100%;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-.h8 { background: #dff9fb;}
-.h830 { background: #f6e58d;}
-.h9 { background: #ffbe76;}
-
+.h8 { background:#dff9fb;}
+.h830 { background:#f6e58d;}
+.h9 { background:#ffbe76;}
+.folga { background:#dcdde1;}
 </style>
 </head>
 
 <body>
 
 <header>
-    <img src="logo.png" alt="Logo">
-    <h2>Escala de Trabalho</h2>
+<img src="SUA-IMAGEM-AQUI.png" alt="Logo">
+<h2>Escala de Trabalho</h2>
 </header>
 
 <div class="container">
 
 <div class="controls">
 Mês:
-<input type="number" id="mes" min="1" max="12" value="4">
+<input type="number" id="mes" value="4">
 Ano:
 <input type="number" id="ano" value="2026">
-
 <button onclick="gerar()">Gerar Escala</button>
+</div>
+
+<div class="ferias">
+<h3>Férias / Folga</h3>
+<select id="colab">
+<option>Maria</option>
+<option>Fernanda</option>
+<option>Camila</option>
+<option>Samyra</option>
+</select>
+
+Início:
+<input type="date" id="inicio">
+Fim:
+<input type="date" id="fim">
+
+<button onclick="addFerias()">Adicionar</button>
 </div>
 
 <table>
@@ -131,8 +120,28 @@ const horarios = [
     {t:"09h - 18h", c:"h9"}
 ];
 
+let ferias = [];
+
+function addFerias(){
+    ferias.push({
+        nome: document.getElementById("colab").value,
+        inicio: new Date(document.getElementById("inicio").value),
+        fim: new Date(document.getElementById("fim").value)
+    });
+
+    alert("Período adicionado!");
+}
+
 function nomeDia(d){
     return ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
+}
+
+function estaDeFerias(nome, data){
+    return ferias.some(f => 
+        f.nome === nome &&
+        data >= f.inicio &&
+        data <= f.fim
+    );
 }
 
 function gerar(){
@@ -173,23 +182,30 @@ function gerar(){
             return arr[(i + base) % 4];
         });
 
-        distribuicao.forEach(h=>{
-            let select = document.createElement("select");
-
-            horarios.forEach((opt,i)=>{
-                let option = document.createElement("option");
-                option.value = i;
-                option.text = opt.t;
-                if(opt.t === h.t) option.selected = true;
-                select.appendChild(option);
-            });
-
-            select.onchange = ()=> aplicarCor(select);
-
+        pessoas.forEach((p,i)=>{
             let td = document.createElement("td");
-            td.appendChild(select);
 
-            aplicarCor(select);
+            if(estaDeFerias(p, data)){
+                td.innerText = "Férias";
+                td.className = "folga";
+            } else {
+                let h = distribuicao[i];
+
+                let select = document.createElement("select");
+
+                horarios.forEach((opt,index)=>{
+                    let option = document.createElement("option");
+                    option.value = index;
+                    option.text = opt.t;
+                    if(opt.t === h.t) option.selected = true;
+                    select.appendChild(option);
+                });
+
+                select.onchange = ()=> aplicarCor(select);
+
+                td.appendChild(select);
+                aplicarCor(select);
+            }
 
             tr.appendChild(td);
         });
