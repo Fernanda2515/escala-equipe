@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Escala Profissional</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 20px;
+    background: #f5f6fa;
+}
+
+h1 {
+    text-align: center;
+}
+
+.controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    border: none;
+    background: #2f3640;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #353b48;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th {
+    background: #273c75;
+    color: white;
+}
+
+th, td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.h8 { background: #dff9fb; }
+.h830 { background: #f6e58d; }
+.h9 { background: #ffbe76; }
+.livre { background: #dcdde1; }
+
+</style>
+</head>
+
+<body>
+
+<h1>Escala Mensal Profissional</h1>
+
+<div class="controls">
+    Mês: <input type="number" id="mes" min="1" max="12" value="4">
+    Ano: <input type="number" id="ano" value="2026">
+
+    <br><br>
+
+    <button onclick="gerarEscala()">Gerar Escala</button>
+    <button onclick="salvar()">Salvar</button>
+    <button onclick="carregar()">Carregar</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Dia</th>
+<th>Maria</th>
+<th>Fernanda</th>
+<th>Camila</th>
+<th>Samyra</th>
+</tr>
+</thead>
+<tbody id="corpo"></tbody>
+</table>
+
+<script>
+const pessoas = ["Maria", "Fernanda", "Camila", "Samyra"];
+
+const horarios = [
+    {texto:"08h - 17h", classe:"h8"},
+    {texto:"08h30 - 17h30", classe:"h830"},
+    {texto:"09h - 18h", classe:"h9"},
+    {texto:"Livre", classe:"livre"}
+];
+
+function diasNoMes(mes, ano) {
+    return new Date(ano, mes, 0).getDate();
+}
+
+function nomeDia(data) {
+    return ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][data.getDay()];
+}
+
+function gerarEscala() {
+    let mes = document.getElementById("mes").value;
+    let ano = document.getElementById("ano").value;
+
+    let corpo = document.getElementById("corpo");
+    corpo.innerHTML = "";
+
+    let dias = diasNoMes(mes, ano);
+
+    for (let d = 1; d <= dias; d++) {
+
+        let data = new Date(ano, mes - 1, d);
+        let diaSemana = data.getDay();
+
+        // PULAR DOMINGO
+        if (diaSemana === 0) continue;
+
+        let semana = Math.floor((d - 1) / 7);
+
+        let linha = document.createElement("tr");
+
+        let tdData = document.createElement("td");
+        tdData.innerText = d + "/" + mes;
+        linha.appendChild(tdData);
+
+        let tdDia = document.createElement("td");
+        tdDia.innerText = nomeDia(data);
+        linha.appendChild(tdDia);
+
+        pessoas.forEach((p, i) => {
+            let td = document.createElement("td");
+
+            let pos = (i + semana) % 4;
+            td.innerText = horarios[pos].texto;
+            td.className = horarios[pos].classe;
+
+            linha.appendChild(td);
+        });
+
+        corpo.appendChild(linha);
+    }
+}
+
+function salvar() {
+    localStorage.setItem("escala_profissional", document.getElementById("corpo").innerHTML);
+    alert("Escala salva!");
+}
+
+function carregar() {
+    let dados = localStorage.getItem("escala_profissional");
+    if (dados) {
+        document.getElementById("corpo").innerHTML = dados;
+    }
+}
+</script>
+
+</body>
+</html>
