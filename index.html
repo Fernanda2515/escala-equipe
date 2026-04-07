@@ -5,26 +5,105 @@
 <title>Escala Profissional</title>
 
 <style>
-body { font-family: Arial; background:#f1f2f6; margin:20px;}
-h1 { text-align:center;}
+body {
+    font-family: Arial;
+    background: #eef2f7;
+    margin: 0;
+}
 
-table { width:100%; border-collapse:collapse; background:white;}
-th { background:#2f3542; color:white;}
-th, td { border:1px solid #ccc; padding:6px; text-align:center;}
+header {
+    background: #2f3542;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
 
-select { width:100%; padding:5px;}
+header img {
+    height: 60px;
+    display: block;
+    margin: 0 auto 10px;
+}
 
-.h8 { background:#dff9fb;}
-.h830 { background:#f6e58d;}
-.h9 { background:#ffbe76;}
+.container {
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+input, button {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #3742fa;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2f3542;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th {
+    background: #3742fa;
+    color: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+select {
+    width: 100%;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.h8 { background: #dff9fb;}
+.h830 { background: #f6e58d;}
+.h9 { background: #ffbe76;}
+
 </style>
 </head>
 
 <body>
 
-<h1>Escala Mensal</h1>
+<header>
+    <img src="logo.png" alt="Logo">
+    <h2>Escala de Trabalho</h2>
+</header>
+
+<div class="container">
+
+<div class="controls">
+Mês:
+<input type="number" id="mes" min="1" max="12" value="4">
+Ano:
+<input type="number" id="ano" value="2026">
 
 <button onclick="gerar()">Gerar Escala</button>
+</div>
 
 <table>
 <thead>
@@ -41,6 +120,8 @@ select { width:100%; padding:5px;}
 <tbody id="tabela"></tbody>
 </table>
 
+</div>
+
 <script>
 const pessoas = ["Maria","Fernanda","Camila","Samyra"];
 
@@ -55,43 +136,44 @@ function nomeDia(d){
 }
 
 function gerar(){
+    let mes = parseInt(document.getElementById("mes").value) - 1;
+    let ano = parseInt(document.getElementById("ano").value);
+
     let tabela = document.getElementById("tabela");
     tabela.innerHTML = "";
 
-    let hoje = new Date();
-    let mes = hoje.getMonth();
-    let ano = hoje.getFullYear();
-
     let dias = new Date(ano, mes+1, 0).getDate();
+    let semanaIndex = 0;
 
     for(let d=1; d<=dias; d++){
         let data = new Date(ano, mes, d);
         let diaSemana = data.getDay();
 
-        // PULAR sábado (6) e domingo (0)
         if(diaSemana === 0 || diaSemana === 6) continue;
+
+        if(diaSemana === 1 && d !== 1) semanaIndex++;
 
         let tr = document.createElement("tr");
 
-        tr.innerHTML += `<td>${d}</td>`;
+        let dataFormatada = `${String(d).padStart(2,"0")}/${String(mes+1).padStart(2,"0")}/${ano}`;
+
+        tr.innerHTML += `<td>${dataFormatada}</td>`;
         tr.innerHTML += `<td>${nomeDia(data)}</td>`;
 
-        // lógica de rodízio
-        let base = (d % 4);
+        let base = semanaIndex % 4;
 
         let distribuicao = [
-            horarios[0], // 08h
-            horarios[0], // 08h
-            horarios[1], // 08h30
-            horarios[2]  // 09h
+            horarios[0],
+            horarios[0],
+            horarios[1],
+            horarios[2]
         ];
 
-        // embaralha com rodízio
         distribuicao = distribuicao.map((_,i,arr)=>{
             return arr[(i + base) % 4];
         });
 
-        distribuicao.forEach((h)=>{
+        distribuicao.forEach(h=>{
             let select = document.createElement("select");
 
             horarios.forEach((opt,i)=>{
@@ -102,9 +184,7 @@ function gerar(){
                 select.appendChild(option);
             });
 
-            select.onchange = ()=>{
-                aplicarCor(select);
-            };
+            select.onchange = ()=> aplicarCor(select);
 
             let td = document.createElement("td");
             td.appendChild(select);
