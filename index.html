@@ -5,74 +5,26 @@
 <title>Escala Profissional</title>
 
 <style>
-body {
-    font-family: Arial;
-    margin: 20px;
-    background: #f5f6fa;
-}
+body { font-family: Arial; background:#f1f2f6; margin:20px;}
+h1 { text-align:center;}
 
-h1 {
-    text-align: center;
-}
+table { width:100%; border-collapse:collapse; background:white;}
+th { background:#2f3542; color:white;}
+th, td { border:1px solid #ccc; padding:6px; text-align:center;}
 
-.controls {
-    text-align: center;
-    margin-bottom: 20px;
-}
+select { width:100%; padding:5px;}
 
-button {
-    padding: 10px 15px;
-    margin: 5px;
-    border: none;
-    background: #2f3640;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-button:hover {
-    background: #353b48;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-}
-
-th {
-    background: #273c75;
-    color: white;
-}
-
-th, td {
-    padding: 8px;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-.h8 { background: #dff9fb; }
-.h830 { background: #f6e58d; }
-.h9 { background: #ffbe76; }
-.livre { background: #dcdde1; }
-
+.h8 { background:#dff9fb;}
+.h830 { background:#f6e58d;}
+.h9 { background:#ffbe76;}
 </style>
 </head>
 
 <body>
 
-<h1>Escala Mensal Profissional</h1>
+<h1>Escala Mensal</h1>
 
-<div class="controls">
-    Mês: <input type="number" id="mes" min="1" max="12" value="4">
-    Ano: <input type="number" id="ano" value="2026">
-
-    <br><br>
-
-    <button onclick="gerarEscala()">Gerar Escala</button>
-    <button onclick="salvar()">Salvar</button>
-    <button onclick="carregar()">Carregar</button>
-</div>
+<button onclick="gerar()">Gerar Escala</button>
 
 <table>
 <thead>
@@ -85,80 +37,90 @@ th, td {
 <th>Samyra</th>
 </tr>
 </thead>
-<tbody id="corpo"></tbody>
+
+<tbody id="tabela"></tbody>
 </table>
 
 <script>
-const pessoas = ["Maria", "Fernanda", "Camila", "Samyra"];
+const pessoas = ["Maria","Fernanda","Camila","Samyra"];
 
 const horarios = [
-    {texto:"08h - 17h", classe:"h8"},
-    {texto:"08h30 - 17h30", classe:"h830"},
-    {texto:"09h - 18h", classe:"h9"},
-    {texto:"Livre", classe:"livre"}
+    {t:"08h - 17h", c:"h8"},
+    {t:"08h30 - 17h30", c:"h830"},
+    {t:"09h - 18h", c:"h9"}
 ];
 
-function diasNoMes(mes, ano) {
-    return new Date(ano, mes, 0).getDate();
+function nomeDia(d){
+    return ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
 }
 
-function nomeDia(data) {
-    return ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][data.getDay()];
-}
+function gerar(){
+    let tabela = document.getElementById("tabela");
+    tabela.innerHTML = "";
 
-function gerarEscala() {
-    let mes = document.getElementById("mes").value;
-    let ano = document.getElementById("ano").value;
+    let hoje = new Date();
+    let mes = hoje.getMonth();
+    let ano = hoje.getFullYear();
 
-    let corpo = document.getElementById("corpo");
-    corpo.innerHTML = "";
+    let dias = new Date(ano, mes+1, 0).getDate();
 
-    let dias = diasNoMes(mes, ano);
-
-    for (let d = 1; d <= dias; d++) {
-
-        let data = new Date(ano, mes - 1, d);
+    for(let d=1; d<=dias; d++){
+        let data = new Date(ano, mes, d);
         let diaSemana = data.getDay();
 
-        // PULAR DOMINGO
-        if (diaSemana === 0) continue;
+        // PULAR sábado (6) e domingo (0)
+        if(diaSemana === 0 || diaSemana === 6) continue;
 
-        let semana = Math.floor((d - 1) / 7);
+        let tr = document.createElement("tr");
 
-        let linha = document.createElement("tr");
+        tr.innerHTML += `<td>${d}</td>`;
+        tr.innerHTML += `<td>${nomeDia(data)}</td>`;
 
-        let tdData = document.createElement("td");
-        tdData.innerText = d + "/" + mes;
-        linha.appendChild(tdData);
+        // lógica de rodízio
+        let base = (d % 4);
 
-        let tdDia = document.createElement("td");
-        tdDia.innerText = nomeDia(data);
-        linha.appendChild(tdDia);
+        let distribuicao = [
+            horarios[0], // 08h
+            horarios[0], // 08h
+            horarios[1], // 08h30
+            horarios[2]  // 09h
+        ];
 
-        pessoas.forEach((p, i) => {
-            let td = document.createElement("td");
-
-            let pos = (i + semana) % 4;
-            td.innerText = horarios[pos].texto;
-            td.className = horarios[pos].classe;
-
-            linha.appendChild(td);
+        // embaralha com rodízio
+        distribuicao = distribuicao.map((_,i,arr)=>{
+            return arr[(i + base) % 4];
         });
 
-        corpo.appendChild(linha);
+        distribuicao.forEach((h)=>{
+            let select = document.createElement("select");
+
+            horarios.forEach((opt,i)=>{
+                let option = document.createElement("option");
+                option.value = i;
+                option.text = opt.t;
+                if(opt.t === h.t) option.selected = true;
+                select.appendChild(option);
+            });
+
+            select.onchange = ()=>{
+                aplicarCor(select);
+            };
+
+            let td = document.createElement("td");
+            td.appendChild(select);
+
+            aplicarCor(select);
+
+            tr.appendChild(td);
+        });
+
+        tabela.appendChild(tr);
     }
 }
 
-function salvar() {
-    localStorage.setItem("escala_profissional", document.getElementById("corpo").innerHTML);
-    alert("Escala salva!");
-}
-
-function carregar() {
-    let dados = localStorage.getItem("escala_profissional");
-    if (dados) {
-        document.getElementById("corpo").innerHTML = dados;
-    }
+function aplicarCor(select){
+    let td = select.parentElement;
+    td.className = horarios[select.value].c;
 }
 </script>
 
